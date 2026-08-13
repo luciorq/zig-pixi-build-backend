@@ -28,6 +28,8 @@ build-hello = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_
 cross-hello-aarch64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi build --path examples/hello-zig --target-platform linux-aarch64 --output-dir dist", description = "Cross-compile hello-zig for linux-aarch64" }
 cross-hello-win64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi build --path examples/hello-zig --target-platform win-64 --output-dir dist", description = "Cross-compile hello-zig for win-64 (MinGW ABI)" }
 cross-hello-osx-arm64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi build --path examples/hello-zig --target-platform osx-arm64 --output-dir dist", description = "Cross-compile hello-zig for osx-arm64" }
+cross-hello-osx-64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi build --path examples/hello-zig --target-platform osx-64 --output-dir dist", description = "Cross-compile hello-zig for osx-64" }
+cross-hello-all = { depends-on = ["build-hello", "cross-hello-aarch64", "cross-hello-win64", "cross-hello-osx-arm64", "cross-hello-osx-64"], description = "Build the full five-platform matrix" }
 
 # Inspect what landed in dist/.
 verify = { cmd = "bash scripts/verify-artifacts.sh", description = "Extract dist/*.conda and report binary formats" }

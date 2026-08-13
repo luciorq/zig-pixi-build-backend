@@ -47,9 +47,17 @@ zig build --build-file .../build.zig --prefix "$PREFIX" --search-prefix "$PREFIX
 | linux-64 (native) | ✅ builds, runs | `bin/hello-zig` — ELF x86-64, ReleaseFast |
 | linux-aarch64 (cross) | ✅ builds | `bin/hello-zig` — ELF aarch64 |
 | win-64 (cross) | ✅ builds | `Library/bin/hello-zig.exe` — PE32+ x86-64 |
-| osx-arm64 (cross) | ❌ blocked | rattler-build post-processing needs `install_name_tool` on the build machine |
+| osx-arm64 (cross) | ✅ builds | `bin/hello-zig` — Mach-O arm64, ad-hoc code signature |
+| osx-64 (cross) | ✅ builds | `bin/hello-zig` — Mach-O x86_64 |
 
 No toolchain other than conda-forge `zig` is involved in any row.
+
+The macOS rows work because the backend disables rattler-build's binary
+relocation when cross-compiling for macOS from a non-mac machine:
+rattler-build's Mach-O post-processing needs `install_name_tool`/`codesign`
+(macOS-only; its builtin relinker cannot add the default `lib/` rpath), and
+zig links and ad-hoc-signs its artifacts itself. The `binary-relocation`
+config option overrides this in either direction.
 
 ## Usage
 
@@ -68,9 +76,10 @@ Requires the fork checkout at `../pixi` (branch `feat/pixi-build-zig`).
 
 ## Known gaps / next steps
 
-- **macOS cross**: blocked in rattler-build's Mach-O relocation step
-  (`install_name_tool`); investigate `llvm-install-name-tool` from
-  conda-forge or skipping relocation for cross builds.
+- **macOS cross with conda dylib deps**: with relocation skipped, binaries
+  that link dylibs from conda host dependencies keep absolute prefix paths;
+  build those on a mac, or extend rattler-build's builtin relinker to
+  handle rpath addition (upstream issue candidate).
 - **Debug info**: zig does not strip by default (`.pdb` on Windows,
   `debug_info` in ELF); consider a `strip` config option.
 - **`build.zig.zon` dependencies**: build environments are offline; needs a
