@@ -1,0 +1,32 @@
+# Minimal test package for the pixi-build-zig backend: a pure-zig executable
+# using the standardTargetOptions/standardOptimizeOption convention.
+#
+# The pixi-build-zig backend is not published on any channel yet; builds are
+# driven from the repo root's tasks, which point pixi at a locally built
+# backend binary via PIXI_BUILD_BACKEND_OVERRIDE.
+
+[workspace]
+authors = ["luciorq <luciorqueiroz@gmail.com>"]
+channels = ["conda-forge"]
+name = "hello-zig"
+platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64", "win-64", "win-arm64"]
+version = "0.1.0"
+preview = ["pixi-build"]
+
+# Installing the workspace environment builds hello-zig from this repo and
+# puts the binary on the env PATH.
+[dependencies]
+hello-zig = { path = "." }
+
+[tasks]
+hello = "hello-zig"
+
+[package]
+name = "hello-zig"
+version = "0.1.0"
+
+[package.build]
+backend = { name = "pixi-build-zig", version = "*" }
+
+[package.build-dependencies]
+zig = "0.16.*"

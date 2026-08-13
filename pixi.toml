@@ -1,0 +1,37 @@
+# zig-pixi-build-backend — testbed workspace
+#
+# This repo validates the pixi-build-zig backend developed on the
+# feat/pixi-build-zig branch of the luciorq/pixi fork (../pixi). The backend
+# is not published on any channel yet, so every build points pixi at the
+# locally built binary via PIXI_BUILD_BACKEND_OVERRIDE.
+#
+# Build the backend first:   pixi run build-backend
+# Then e.g.:                 pixi run build-hello
+#                            pixi run cross-hello-aarch64
+
+[workspace]
+authors = ["luciorq <luciorqueiroz@gmail.com>"]
+channels = ["conda-forge"]
+name = "zig-pixi-build-backend"
+platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64", "win-64"]
+version = "0.1.0"
+
+[tasks]
+# Rebuild the backend binary from the fork checkout.
+build-backend = { cmd = "cargo build -p pixi-build-zig", cwd = "../pixi", description = "Build pixi-build-zig from the fork at ../pixi" }
+
+# Native build of the hello-zig example; drops the .conda next to the manifest.
+build-hello = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi build --path examples/hello-zig --output-dir dist", description = "Native build of examples/hello-zig through the local backend" }
+
+# Cross builds from this machine. Same-OS cross needs no extra toolchain
+# packages: the zig in the build env targets everything.
+cross-hello-aarch64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi build --path examples/hello-zig --target-platform linux-aarch64 --output-dir dist", description = "Cross-compile hello-zig for linux-aarch64" }
+cross-hello-win64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi build --path examples/hello-zig --target-platform win-64 --output-dir dist", description = "Cross-compile hello-zig for win-64 (MinGW ABI)" }
+cross-hello-osx-arm64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi build --path examples/hello-zig --target-platform osx-arm64 --output-dir dist", description = "Cross-compile hello-zig for osx-arm64" }
+
+# Inspect what landed in dist/.
+verify = { cmd = "bash scripts/verify-artifacts.sh", description = "Extract dist/*.conda and report binary formats" }
+
+[dependencies]
+# For extracting and inspecting built .conda artifacts.
+python = ">=3.12"
