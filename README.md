@@ -106,6 +106,23 @@ not network-sandboxed, so `zig build` fetches them during the build
 (content still pinned by the zon `hash`). Works, but makes the build
 depend on the URL being reachable — vendor for reproducibility.
 
+### examples/greet-zig — shared-library producer → consumer
+
+`libgreet` is a zig-built **shared library** package (`lib/libgreet.so`,
+`include/greet.h`; on Windows `Library/bin/greet.dll` +
+`Library/lib/greet.lib` — zig produces the conda-conventional layout by
+itself). `greet-cli` links it as a **path host-dependency**: pixi builds the
+producer through the backend first, the consumer links it via
+`--search-prefix`, and both publish jointly as a self-contained set
+(`publish = true` + workspace-level `pixi publish`). Verified: native
+build + run (`hello from libgreet on x86_64-linux`, `RPATH $ORIGIN/../lib`,
+`SONAME libgreet.so`), win-64 cross of the whole chain.
+
+Found along the way: pixi's `[package.run-exports]` propagates a source
+path with one extra `../` for path packages, so the consumer declares an
+explicit run-dependency instead — see
+`docs/upstream/pixi-run-exports-path.md` for the full analysis.
+
 ## Usage
 
 The backend is not published to any channel yet, so builds point pixi at a

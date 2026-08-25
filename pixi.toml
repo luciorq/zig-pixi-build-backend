@@ -47,6 +47,13 @@ build-zon-dep = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJEC
 demo-zon-dep = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi run --manifest-path examples/zon-dep-zig/pixi.toml demo", description = "Build, install and run zon-dep-zig in its workspace env" }
 cross-zon-dep-win64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi publish --path examples/zon-dep-zig --target-platform win-64 --target-dir dist", description = "Cross-compile zon-dep-zig for win-64" }
 
+# greet-zig: producer -> consumer story — a zig-built shared library package
+# (libgreet) linked by another package (greet-cli) as a path host-dependency,
+# published jointly as a self-contained set.
+build-greet = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi publish --target-dir ../../dist", cwd = "examples/greet-zig", description = "Joint native build of libgreet + greet-cli" }
+demo-greet = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi run --manifest-path examples/greet-zig/pixi.toml demo", description = "Build, install and run greet-cli in the workspace env" }
+cross-greet-win64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi publish --target-platform win-64 --target-dir ../../dist", cwd = "examples/greet-zig", description = "Joint win-64 cross build of libgreet + greet-cli" }
+
 # Inspect what landed in dist/.
 verify = { cmd = "bash scripts/verify-artifacts.sh", description = "Extract dist/*.conda and report binary formats" }
 

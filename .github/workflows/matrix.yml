@@ -54,6 +54,12 @@ jobs:
           pixi run build-zon-dep
           pixi run cross-zon-dep-win64
 
+      - name: Build greet-zig (shared library producer -> consumer)
+        working-directory: testbed
+        run: |
+          pixi run build-greet
+          pixi run cross-greet-win64
+
       - name: Verify artifact layouts and binary formats
         working-directory: testbed
         run: |
@@ -61,6 +67,10 @@ jobs:
           grep -q "Library/bin/hello-zig.exe" verify.out
           grep -q "Library/bin/zlib-zig.exe" verify.out
           grep -q "Library/bin/zon-dep-zig.exe" verify.out
+          grep -q "Library/bin/greet.dll" verify.out
+          grep -q "Library/lib/greet.lib" verify.out
+          grep -q "Library/include/greet.h" verify.out
+          grep -q "Library/bin/greet-cli.exe" verify.out
           grep -q "ELF 64-bit LSB executable, ARM aarch64" verify.out
           grep -q "Mach-O 64-bit arm64" verify.out
           grep -q "Mach-O 64-bit x86_64" verify.out
@@ -73,6 +83,10 @@ jobs:
       - name: Run the native zon-dep demo in a pixi env
         working-directory: testbed
         run: pixi run demo-zon-dep 2>&1 | grep "greetings from a zon dependency on x86_64-linux"
+
+      - name: Run the native greet demo in a pixi env
+        working-directory: testbed
+        run: pixi run demo-greet 2>&1 | grep "hello from libgreet on x86_64-linux"
 
       - name: Run the cross-built aarch64 binary under qemu
         working-directory: testbed
@@ -147,3 +161,9 @@ jobs:
         run: |
           python scripts/extract-conda.py --find dist --name zlib-zig --subdir win-64 extracted-zlib
           pixi exec --spec zlib -- ./extracted-zlib/Library/bin/zlib-zig.exe 2>&1 | grep "zlib .* on x86_64-windows"
+      - name: Run cross-built greet-cli against cross-built greet.dll
+        shell: bash
+        run: |
+          python scripts/extract-conda.py --find dist --name libgreet --subdir win-64 extracted-greet
+          python scripts/extract-conda.py --find dist --name greet-cli --subdir win-64 extracted-greet
+          ./extracted-greet/Library/bin/greet-cli.exe 2>&1 | grep "hello from libgreet on x86_64-windows"

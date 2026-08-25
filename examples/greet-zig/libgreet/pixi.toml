@@ -1,0 +1,19 @@
+# Producer package: a zig-built shared library with a C ABI
+# (lib/libgreet.* + include/greet.h). Member of the greet-zig workspace.
+#
+# NOTE: the conda-idiomatic way to propagate the runtime dependency would
+# be [package.run-exports.weak] here, but pixi currently re-anchors the
+# run-exported source path with an extra `../`, breaking resolution for
+# path packages (see docs/upstream/pixi-run-exports-path.md). The consumer
+# declares an explicit run-dependency instead.
+
+[package]
+publish = true
+name = "libgreet"
+version = "0.1.0"
+
+[package.build]
+backend = { name = "pixi-build-zig", version = "*" }
+
+[package.build-dependencies]
+zig = "0.16.*"

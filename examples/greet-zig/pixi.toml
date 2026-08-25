@@ -1,0 +1,17 @@
+# Workspace tying the producer (libgreet, a zig-built shared library) and
+# the consumer (greet-cli) together, so they can be built, run and
+# published as one self-contained set.
+
+[workspace]
+authors = ["luciorq <luciorqueiroz@gmail.com>"]
+channels = ["conda-forge"]
+name = "greet-zig"
+platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64", "win-64"]
+version = "0.1.0"
+preview = ["pixi-build"]
+
+[dependencies]
+greet-cli = { path = "greet-cli" }
+
+[tasks]
+demo = "greet-cli"

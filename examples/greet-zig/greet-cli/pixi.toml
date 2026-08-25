@@ -1,0 +1,21 @@
+# Consumer package: an executable linking the zig-built libgreet shared
+# library from the sibling package. Member of the greet-zig workspace.
+
+[package]
+publish = true
+name = "greet-cli"
+version = "0.1.0"
+
+[package.build]
+backend = { name = "pixi-build-zig", version = "*" }
+
+[package.build-dependencies]
+zig = "0.16.*"
+
+[package.host-dependencies]
+libgreet = { path = "../libgreet" }
+
+# Explicit because pixi's run-exports path re-anchoring is broken for path
+# source packages — see the note in ../libgreet/pixi.toml.
+[package.run-dependencies]
+libgreet = { path = "../libgreet" }
