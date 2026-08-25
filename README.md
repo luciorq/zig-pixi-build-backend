@@ -59,6 +59,33 @@ rattler-build's Mach-O post-processing needs `install_name_tool`/`codesign`
 zig links and ad-hoc-signs its artifacts itself. The `binary-relocation`
 config option overrides this in either direction.
 
+### examples/zlib-zig — conda host dependencies
+
+A zig executable whose C part `#include <zlib.h>`s and links libz, both
+resolved from the conda host environment through the backend's
+`--search-prefix`. Verified (same build machine):
+
+| target | result | linkage |
+|---|---|---|
+| linux-64 (native) | ✅ builds, runs in the pixi env | `NEEDED libz.so.1`, `RPATH $ORIGIN/../lib`, glibc symbols ≤ 2.28 |
+| linux-aarch64 (cross) | ✅ builds | same, aarch64 |
+| win-64 (cross) | ✅ builds | imports `zlib.dll`, `Library/bin/` layout |
+| osx-arm64 / osx-64 (cross) | ✅ builds | libz linked **statically** (see below), only `/usr/lib/libSystem` loaded, signed |
+
+Two findings baked into the example:
+
+- conda-forge names the import library `zlib` on Windows and `z` elsewhere;
+  `build.zig` picks per target.
+- **zig 0.16's Mach-O linker drops `-rpath`**: no `LC_RPATH` is emitted even
+  by a minimal `zig cc -target aarch64-macos -Wl,-rpath,...` link (ELF
+  targets keep theirs; zig uses LLD for ELF/COFF but its own self-hosted
+  linker for Mach-O — upstream zig issue candidate). Combined with
+  relocation being skipped on cross builds, a dynamic libz would be
+  unresolvable at runtime on macOS, so the example links libz statically
+  there (`preferred_link_mode = .static`) — the conda host env ships
+  `libz.a`. This mirrors what r-zig-pixi found independently: its build
+  leaves "all Mach-O rpath/codesign surgery" to a post-build script.
+
 ## Usage
 
 The backend is not published to any channel yet, so builds point pixi at a
@@ -84,7 +111,7 @@ Requires the fork checkout at `../pixi` (branch `feat/pixi-build-zig`).
   `debug_info` in ELF); consider a `strip` config option.
 - **`build.zig.zon` dependencies**: build environments are offline; needs a
   vendoring/`--fetch` story.
-- **Runtime execution of cross artifacts**: only the native binary was
+- **Runtime execution of cross artifacts**: only the native binaries were
   executed; qemu/wine smoke tests would close the loop.
-- An example that links a conda host dependency (e.g. zlib) to exercise
-  `--search-prefix` end to end.
+- **zig Mach-O linker `-rpath`**: report the dropped `LC_RPATH` upstream to
+  ziglang (minimal repro in the README section above).

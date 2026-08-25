@@ -31,6 +31,16 @@ cross-hello-osx-arm64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIX
 cross-hello-osx-64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi build --path examples/hello-zig --target-platform osx-64 --output-dir dist", description = "Cross-compile hello-zig for osx-64" }
 cross-hello-all = { depends-on = ["build-hello", "cross-hello-aarch64", "cross-hello-win64", "cross-hello-osx-arm64", "cross-hello-osx-64"], description = "Build the full five-platform matrix" }
 
+# zlib-zig: exercises conda host dependencies (--search-prefix), C sources
+# compiled by zig's clang, and per-platform link modes.
+build-zlib = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi build --path examples/zlib-zig --output-dir dist", description = "Native build of examples/zlib-zig through the local backend" }
+demo-zlib = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi run --manifest-path examples/zlib-zig/pixi.toml demo", description = "Build, install and run zlib-zig in its workspace env" }
+cross-zlib-aarch64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi build --path examples/zlib-zig --target-platform linux-aarch64 --output-dir dist", description = "Cross-compile zlib-zig for linux-aarch64" }
+cross-zlib-win64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi build --path examples/zlib-zig --target-platform win-64 --output-dir dist", description = "Cross-compile zlib-zig for win-64" }
+cross-zlib-osx-arm64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi build --path examples/zlib-zig --target-platform osx-arm64 --output-dir dist", description = "Cross-compile zlib-zig for osx-arm64 (static libz)" }
+cross-zlib-osx-64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi build --path examples/zlib-zig --target-platform osx-64 --output-dir dist", description = "Cross-compile zlib-zig for osx-64 (static libz)" }
+cross-zlib-all = { depends-on = ["build-zlib", "cross-zlib-aarch64", "cross-zlib-win64", "cross-zlib-osx-arm64", "cross-zlib-osx-64"], description = "Build the full zlib-zig matrix" }
+
 # Inspect what landed in dist/.
 verify = { cmd = "bash scripts/verify-artifacts.sh", description = "Extract dist/*.conda and report binary formats" }
 
