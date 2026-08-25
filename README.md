@@ -93,6 +93,19 @@ Two findings baked into the example:
   `libz.a`. This mirrors what r-zig-pixi found independently: its build
   leaves "all Mach-O rpath/codesign surgery" to a post-build script.
 
+### examples/zon-dep-zig — build.zig.zon dependencies
+
+An executable importing a module from a **vendored path dependency**
+(`.greeter = .{ .path = "vendor/greeter" }`) — fully offline and hermetic,
+the recommended way to consume zig packages in conda build environments.
+Its `[package]` table is empty too (metadata from zon). Verified: native
+build + run, win-64 cross.
+
+URL dependencies were also tested empirically: the build environment is
+not network-sandboxed, so `zig build` fetches them during the build
+(content still pinned by the zon `hash`). Works, but makes the build
+depend on the URL being reachable — vendor for reproducibility.
+
 ## Usage
 
 The backend is not published to any channel yet, so builds point pixi at a

@@ -1,0 +1,28 @@
+# Test package for build.zig.zon dependencies with the pixi-build-zig
+# backend: the executable imports a module from a VENDORED path dependency
+# (vendor/greeter) — fully offline and hermetic, which is the recommended
+# way to consume zig packages inside conda build environments.
+#
+# Package name/version come from build.zig.zon; [package] stays empty.
+
+[workspace]
+authors = ["luciorq <luciorqueiroz@gmail.com>"]
+channels = ["conda-forge"]
+name = "zon-dep-zig"
+platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64", "win-64"]
+version = "0.1.0"
+preview = ["pixi-build"]
+
+[dependencies]
+zon_dep_zig = { path = "." }
+
+[tasks]
+demo = "zon-dep-zig"
+
+[package]
+
+[package.build]
+backend = { name = "pixi-build-zig", version = "*" }
+
+[package.build-dependencies]
+zig = "0.16.*"

@@ -48,12 +48,19 @@ jobs:
         working-directory: testbed
         run: pixi run cross-zlib-all
 
+      - name: Build zon-dep-zig (vendored build.zig.zon dependency)
+        working-directory: testbed
+        run: |
+          pixi run build-zon-dep
+          pixi run cross-zon-dep-win64
+
       - name: Verify artifact layouts and binary formats
         working-directory: testbed
         run: |
           bash scripts/verify-artifacts.sh | tee verify.out
           grep -q "Library/bin/hello-zig.exe" verify.out
           grep -q "Library/bin/zlib-zig.exe" verify.out
+          grep -q "Library/bin/zon-dep-zig.exe" verify.out
           grep -q "ELF 64-bit LSB executable, ARM aarch64" verify.out
           grep -q "Mach-O 64-bit arm64" verify.out
           grep -q "Mach-O 64-bit x86_64" verify.out
@@ -62,6 +69,10 @@ jobs:
       - name: Run the native zlib demo in a pixi env
         working-directory: testbed
         run: pixi run demo-zlib 2>&1 | grep "zlib .* on x86_64-linux"
+
+      - name: Run the native zon-dep demo in a pixi env
+        working-directory: testbed
+        run: pixi run demo-zon-dep 2>&1 | grep "greetings from a zon dependency on x86_64-linux"
 
       - name: Run the cross-built aarch64 binary under qemu
         working-directory: testbed

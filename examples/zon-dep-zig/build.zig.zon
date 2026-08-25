@@ -1,0 +1,22 @@
+.{
+    // name/version feed the backend's zon metadata provider; [package] in
+    // pixi.toml stays empty.
+    .name = .zon_dep_zig,
+    .version = "0.1.0",
+    .fingerprint = 0x3cb29f8d00000001,
+    .minimum_zig_version = "0.14.0",
+    .dependencies = .{
+        // A vendored path dependency: fully offline, hermetic, and the
+        // recommended way to consume zig packages inside conda build
+        // environments.
+        .greeter = .{
+            .path = "vendor/greeter",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "vendor",
+    },
+}
