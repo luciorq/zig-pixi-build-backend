@@ -59,6 +59,13 @@ rattler-build's Mach-O post-processing needs `install_name_tool`/`codesign`
 zig links and ad-hoc-signs its artifacts itself. The `binary-relocation`
 config option overrides this in either direction.
 
+The hello-zig example also demonstrates zon-based metadata: its
+`[package]` table declares no name or version — the backend reads them
+from `build.zig.zon` (`.name`/`.version`), the way the Rust backend reads
+Cargo.toml. The package is `hello_zig-0.2.0-*.conda` (zon names are zig
+identifiers, so no hyphens); zlib-zig keeps explicit `[package]` metadata
+to cover the declared mode.
+
 ### examples/zlib-zig — conda host dependencies
 
 A zig executable whose C part `#include <zlib.h>`s and links libz, both

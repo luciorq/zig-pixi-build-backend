@@ -16,14 +16,14 @@ preview = ["pixi-build"]
 # Installing the workspace environment builds hello-zig from this repo and
 # puts the binary on the env PATH.
 [dependencies]
-hello-zig = { path = "." }
+hello_zig = { path = "." }
 
 [tasks]
 hello = "hello-zig"
 
+# name/version come from build.zig.zon (.name/.version) via the backend's
+# zon metadata provider — nothing to declare here.
 [package]
-name = "hello-zig"
-version = "0.1.0"
 
 [package.build]
 backend = { name = "pixi-build-zig", version = "*" }
