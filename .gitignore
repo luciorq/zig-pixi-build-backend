@@ -48,3 +48,4 @@ dist/
 examples/*/.pixi/
 .zig-cache/
 zig-out/
+extracted-*/

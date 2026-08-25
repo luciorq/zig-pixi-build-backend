@@ -101,6 +101,16 @@ pixi run verify                 # extract dist/*.conda, report binary formats
 
 Requires the fork checkout at `../pixi` (branch `feat/pixi-build-zig`).
 
+## CI
+
+`.github/workflows/matrix.yml` rebuilds the backend from the fork branch,
+builds the full ten-artifact matrix on one linux runner, checks every
+binary's format and layout, then **executes** the cross-built artifacts
+where it can: natively in a pixi env on linux, under qemu for
+linux-aarch64, on a real macOS arm64 runner (which also validates zig's
+ad-hoc code signature — macOS kills invalidly signed binaries), and on a
+Windows runner with `zlib.dll` provided via `pixi exec`.
+
 ## Known gaps / next steps
 
 - **macOS cross with conda dylib deps**: with relocation skipped, binaries
@@ -111,7 +121,5 @@ Requires the fork checkout at `../pixi` (branch `feat/pixi-build-zig`).
   `debug_info` in ELF); consider a `strip` config option.
 - **`build.zig.zon` dependencies**: build environments are offline; needs a
   vendoring/`--fetch` story.
-- **Runtime execution of cross artifacts**: only the native binaries were
-  executed; qemu/wine smoke tests would close the loop.
 - **zig Mach-O linker `-rpath`**: report the dropped `LC_RPATH` upstream to
   ziglang (minimal repro in the README section above).

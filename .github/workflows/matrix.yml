@@ -1,0 +1,138 @@
+# Build the pixi-build-zig backend from the fork, produce the ten-artifact
+# cross matrix (hello-zig + zlib-zig x five platforms) on a single linux
+# runner, then EXECUTE the cross-built binaries on real macOS arm64 and
+# Windows runners (and aarch64 via qemu) — proving the artifacts run, not
+# just that they build.
+name: cross-matrix
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build matrix (linux-64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: testbed
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: luciorq/pixi
+          ref: feat/pixi-build-zig
+          path: pixi
+          persist-credentials: false
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: pixi
+
+      - name: Build the backend
+        working-directory: pixi
+        run: cargo build -p pixi-build-zig
+
+      - uses: prefix-dev/setup-pixi@v0.10.0
+        with:
+          run-install: false
+
+      - name: Build hello-zig for all five platforms
+        working-directory: testbed
+        run: pixi run cross-hello-all
+
+      - name: Build zlib-zig for all five platforms
+        working-directory: testbed
+        run: pixi run cross-zlib-all
+
+      - name: Verify artifact layouts and binary formats
+        working-directory: testbed
+        run: |
+          bash scripts/verify-artifacts.sh | tee verify.out
+          grep -q "Library/bin/hello-zig.exe" verify.out
+          grep -q "Library/bin/zlib-zig.exe" verify.out
+          grep -q "ELF 64-bit LSB executable, ARM aarch64" verify.out
+          grep -q "Mach-O 64-bit arm64" verify.out
+          grep -q "Mach-O 64-bit x86_64" verify.out
+          grep -q "PE32+ executable" verify.out
+
+      - name: Run the native zlib demo in a pixi env
+        working-directory: testbed
+        run: pixi run demo-zlib 2>&1 | grep "zlib .* on x86_64-linux"
+
+      - name: Run the cross-built aarch64 binary under qemu
+        working-directory: testbed
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q qemu-user
+          pixi exec --spec python=3.12 --spec zstandard -- \
+            python scripts/extract-conda.py --find dist --name hello-zig --subdir linux-aarch64 extracted-aarch64
+          qemu-aarch64 extracted-aarch64/bin/hello-zig 2>&1 | grep "aarch64-linux"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conda-packages
+          path: testbed/dist/*.conda
+
+  run-macos:
+    name: execute on macOS arm64
+    needs: build
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: conda-packages
+          path: dist
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install zstandard
+
+      # Executing these binaries is the real test of zig's ad-hoc code
+      # signature: macOS arm64 kills unsigned or invalidly signed binaries.
+      - name: Run cross-built hello-zig
+        run: |
+          python scripts/extract-conda.py --find dist --name hello-zig --subdir osx-arm64 extracted-hello
+          extracted-hello/bin/hello-zig 2>&1 | grep "aarch64-macos"
+      - name: Run cross-built zlib-zig (static libz)
+        run: |
+          python scripts/extract-conda.py --find dist --name zlib-zig --subdir osx-arm64 extracted-zlib
+          extracted-zlib/bin/zlib-zig 2>&1 | grep "zlib .* on aarch64-macos"
+
+  run-windows:
+    name: execute on Windows x64
+    needs: build
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: conda-packages
+          path: dist
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install zstandard
+      - uses: prefix-dev/setup-pixi@v0.10.0
+        with:
+          run-install: false
+
+      - name: Run cross-built hello-zig
+        shell: bash
+        run: |
+          python scripts/extract-conda.py --find dist --name hello-zig --subdir win-64 extracted-hello
+          ./extracted-hello/Library/bin/hello-zig.exe 2>&1 | grep "x86_64-windows"
+      - name: Run cross-built zlib-zig (needs zlib.dll from conda)
+        shell: bash
+        run: |
+          python scripts/extract-conda.py --find dist --name zlib-zig --subdir win-64 extracted-zlib
+          pixi exec --spec zlib -- ./extracted-zlib/Library/bin/zlib-zig.exe 2>&1 | grep "zlib .* on x86_64-windows"
