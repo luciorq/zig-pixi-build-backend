@@ -60,3 +60,4 @@ verify = { cmd = "bash scripts/verify-artifacts.sh", description = "Extract dist
 [dependencies]
 # For extracting and inspecting built .conda artifacts.
 python = ">=3.12"
+

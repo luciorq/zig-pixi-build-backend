@@ -160,3 +160,4 @@ Windows runner with `zlib.dll` provided via `pixi exec`.
   vendoring/`--fetch` story.
 - **zig Mach-O linker `-rpath`**: report the dropped `LC_RPATH` upstream to
   ziglang (minimal repro in the README section above).
+
