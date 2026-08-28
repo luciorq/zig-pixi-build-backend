@@ -28,12 +28,27 @@ jobs:
           path: pixi
           persist-credentials: false
 
+      # The job fills the ~14 GB free on a hosted runner: a cold cargo build
+      # of the pixi workspace plus four example workspaces' envs and build
+      # dirs ran the disk dry (the runner then cannot even write its own
+      # logs, which shows up as empty log archives). Drop the preinstalled
+      # toolchains we never use (~25 GB) before anything else.
+      - name: Free runner disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          df -h /
+
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: pixi
 
       - name: Build the backend
         working-directory: pixi
+        env:
+          # Debug info dominates the target directory size and the backend
+          # does not need it in CI.
+          CARGO_PROFILE_DEV_DEBUG: "0"
         run: cargo build -p pixi-build-zig
 
       - uses: prefix-dev/setup-pixi@v0.10.1
@@ -75,6 +90,12 @@ jobs:
           grep -q "Mach-O 64-bit arm64" verify.out
           grep -q "Mach-O 64-bit x86_64" verify.out
           grep -q "PE32+ executable" verify.out
+
+      - name: Clean build work directories before the demos
+        working-directory: testbed
+        run: |
+          rm -rf examples/*/.pixi/bld examples/*/*/.pixi/bld
+          df -h /
 
       - name: Run the native zlib demo in a pixi env
         working-directory: testbed
