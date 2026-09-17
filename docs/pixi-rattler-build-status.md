@@ -8,18 +8,21 @@ the upstream state the pixi-build-zig fork (`../pixi`, branch
 
 | component | fork (`../pixi`) | upstream pixi `main` | latest published |
 |---|---|---|---|
-| pixi | 0.78.0 (crate version) | 0.81.0 (tag 2026-09-15) | **0.81.0** |
+| pixi | 0.81.0 | 0.81.0 (tag 2026-09-15) | **0.81.0** |
 | `pixi-build-api-version` | 7 | 7 (lower 7, upper 8) | 7 |
-| `rattler_build_core` | 0.2.12 | 0.2.13 | **0.2.14** (2026-09-14) |
-| `rattler_build_recipe` | 0.1.13 | 0.1.14 | **0.1.15** (2026-09-14) |
-| `rattler_build_jinja` / `_variant_config` | 0.1.13 | 0.1.14 | 0.1.15 |
-| `rattler_build_types` | 0.1.12 | 0.1.13 | — |
-| `rattler_conda_types` | 0.51 | 0.52 | — |
+| `rattler_build_core` | 0.2.13 | 0.2.13 | **0.2.14** (2026-09-14) |
+| `rattler_build_recipe` | 0.1.14 | 0.1.14 | **0.1.15** (2026-09-14) |
+| `rattler_build_jinja` / `_variant_config` | 0.1.14 | 0.1.14 | 0.1.15 |
+| `rattler_build_types` | 0.1.13 | 0.1.13 | — |
+| `rattler_conda_types` | 0.52 | 0.52 | — |
 | rattler-build CLI | — | — | **0.76.1** (2026-09-14) |
 
-Fork base is upstream `337473f04` (2026-09-03); upstream `main` is 39
-commits ahead, the fork 8 commits ahead. A dry-run merge
-(`git merge-tree`) conflicts only in `Cargo.lock`.
+Fork rebased 2026-09-16 onto upstream `f14af9ea8` (2026-09-16, 39 commits
+absorbed, 8 fork commits replayed). The only conflict was `Cargo.lock`,
+resolved by taking upstream's lock and letting cargo re-add the
+`pixi-build-zig` entry; the fork's `Cargo.toml` is now byte-identical to
+upstream and the lock differs only by that one package. Before the rebase
+the fork was on pixi 0.78.0 / core 0.2.12 / recipe 0.1.13.
 
 ## pixi 0.79.0 → 0.81.0 (2026-09-03 → 2026-09-15)
 
@@ -122,9 +125,7 @@ relocation is disabled (per-file guard instead of global early return).
 
 ## Action items
 
-1. Rebase the fork onto upstream `main` (Cargo.lock conflict only) to pick
-   up 0.81.0's cross-compile dispatcher fixes and the crate bumps to
-   core 0.2.13 / recipe 0.1.14.
+1. ~~Rebase the fork onto upstream `main`~~ — done 2026-09-16 (see above).
 2. Re-test the run-exports off-by-one on pixi 0.81.0 before filing.
 3. If bumping straight to recipe 0.1.15, patch the three signature
    changes above.

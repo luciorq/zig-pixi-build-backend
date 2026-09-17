@@ -5,6 +5,11 @@ Reviewed 2026-09-05 against zig-feedstock main (0.16.0, build 16 in
 Re-checked 2026-09-16: build 17 published (2026-09-15), build 18 open as
 the declared last 0.16.0 build; see "Update 2026-09-16" at the end.
 
+> **Zig upstream is on Codeberg, not GitHub.** Every `github.com/ziglang/*`
+> repository is a frozen leftover of the 2025-11-26 migration. Use
+> https://codeberg.org/ziglang and https://ziglang.org/download/index.json.
+> Details and API pointers: [`zig-upstream-is-on-codeberg.md`](zig-upstream-is-on-codeberg.md).
+
 ## Package architecture (since 0.16.0 build ~14/15)
 
 The feedstock produces a full conda compiler-package family, structurally
@@ -39,8 +44,11 @@ Cross packages are **same-OS-family only** (`xc_valid` in the recipe):
 | win-64 | win-64, win-arm64, win-32 |
 | osx-arm64 | osx-arm64, osx-64 |
 
-Special cases: ppc64le routes linking through `gcc_impl`/`binutils_impl`
-(LLD lacks PowerPC64 relocations); riscv64 pins glibc 2.27 floor.
+Special cases (as of build 16): ppc64le routes linking through
+`gcc_impl`/`binutils_impl` (LLD lacks PowerPC64 relocations); riscv64 pins
+glibc 2.27 floor. **Build 17 dropped the ppc64le gcc/binutils routing
+patches** in favour of a `dl_iterate_phdr` patch plus native bootstrap
+(see the 2026-09-16 update).
 
 ## Target-triple policy
 
@@ -141,9 +149,11 @@ matrix, maintainers, PR #175 still draft).
 
 ### Upstream ziglang/zig
 
-- **GitHub mirror is dead**: ziglang/zig moved to Codeberg 2025-11-26; the
-  GitHub releases API stops at 0.15.1. Poll
+- **GitHub is not upstream**: ziglang/zig moved to Codeberg 2025-11-26 and
+  every `github.com/ziglang/*` repo is frozen or archived; the GitHub
+  releases API stops at 0.15.1. Poll
   `https://ziglang.org/download/index.json` or codeberg.org/ziglang/zig.
+  See [`zig-upstream-is-on-codeberg.md`](zig-upstream-is-on-codeberg.md).
 - No 0.16.x point release; 0.16.0 (2026-04-13) remains latest stable.
   0.17.0 has no date (master `0.17.0-dev.2131`, milestone 24 open issues).
 - Master changes relevant to the backend:

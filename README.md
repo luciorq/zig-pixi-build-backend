@@ -42,6 +42,14 @@ zig build --build-file .../build.zig --prefix "$PREFIX" --search-prefix "$PREFIX
 
 ## Verified so far (2026-08-13, linux-64 build machine)
 
+Re-verified 2026-09-16 after rebasing the fork onto upstream pixi
+`f14af9ea8` (pixi 0.81.0, `rattler_build_core` 0.2.13,
+`rattler_build_recipe` 0.1.14) against conda-forge zig 0.16.0 build 17:
+backend unit tests (40), the full 16-artifact matrix below, the layout and
+binary-format checks from CI, and the three native demos all pass with
+build hashes identical to the previous run. Only the qemu aarch64 execution
+step was not reproduced locally (no `qemu-aarch64` installed).
+
 | target | result | artifact |
 |---|---|---|
 | linux-64 (native) | ✅ builds, runs | `bin/hello-zig` — ELF x86-64, ReleaseFast |
@@ -148,6 +156,15 @@ linux-aarch64, on a real macOS arm64 runner (which also validates zig's
 ad-hoc code signature — macOS kills invalidly signed binaries), and on a
 Windows runner with `zlib.dll` provided via `pixi exec`.
 
+## Zig upstream is on Codeberg
+
+All official Zig repositories moved from GitHub to
+[codeberg.org/ziglang](https://codeberg.org/ziglang) on 2025-11-26. Every
+`github.com/ziglang/*` repository is frozen or archived and must not be
+used for releases, sources, issues or dependencies. Use
+`https://ziglang.org/download/index.json` for versions and tarballs. See
+[`docs/zig-upstream-is-on-codeberg.md`](docs/zig-upstream-is-on-codeberg.md).
+
 ## Known gaps / next steps
 
 - **macOS cross with conda dylib deps**: with relocation skipped, binaries
@@ -156,8 +173,13 @@ Windows runner with `zlib.dll` provided via `pixi exec`.
   handle rpath addition (upstream issue candidate).
 - **Debug info**: zig does not strip by default (`.pdb` on Windows,
   `debug_info` in ELF); consider a `strip` config option.
-- **`build.zig.zon` dependencies**: build environments are offline; needs a
-  vendoring/`--fetch` story.
-- **zig Mach-O linker `-rpath`**: report the dropped `LC_RPATH` upstream to
-  ziglang (minimal repro in the README section above).
+- **`build.zig.zon` URL dependencies**: vendored path dependencies are the
+  hermetic, recommended route (see `examples/zon-dep-zig`); URL
+  dependencies work only because the build environment is not
+  network-sandboxed, so they are not reproducible offline. A `zig fetch`
+  pre-population step could close that gap.
+- **zig Mach-O linker `-rpath`**: report the dropped `LC_RPATH` upstream on
+  Codeberg (https://codeberg.org/ziglang/zig/issues, **not** GitHub); draft
+  in `docs/upstream/zig-macho-rpath.md`, minimal repro in the README
+  section above.
 

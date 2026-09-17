@@ -3,6 +3,12 @@
 Status: DRAFT, not yet filed. Evidence gathered 2026-08-13/14 on linux-64
 with conda-forge zig 0.16.0.
 
+**File this on Codeberg, not GitHub**: https://codeberg.org/ziglang/zig/issues
+(`github.com/ziglang/zig` is frozen since the 2025-11-26 migration; see
+[`../zig-upstream-is-on-codeberg.md`](../zig-upstream-is-on-codeberg.md)).
+Search for duplicates there first, e.g.
+`curl -s 'https://codeberg.org/api/v1/repos/ziglang/zig/issues?state=all&q=LC_RPATH&type=issues'`.
+
 ## Title
 
 self-hosted Mach-O linker does not emit `LC_RPATH` for `-rpath` (all
