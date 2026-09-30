@@ -56,8 +56,14 @@ cross-greet-win64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PR
 
 # Inspect what landed in dist/.
 verify = { cmd = "bash scripts/verify-artifacts.sh", description = "Extract dist/*.conda and report binary formats" }
+# Rebuild the linux-64 examples with the official ziglang.org tarball and
+# diff NEEDED/size against the conda-forge-zig artifacts in dist/.
+compare-upstream = { cmd = "bash scripts/compare-upstream-zig.sh", depends-on = ["build-zlib", "build-zon-dep", "build-greet", "build-hello"], description = "Compare dist/ artifacts against builds with upstream (unpatched) zig" }
 
 [dependencies]
 # For extracting and inspecting built .conda artifacts.
 python = ">=3.12"
+zstandard = "*"
+# Host library for the upstream-zig comparison build of examples/zlib-zig.
+zlib = "*"
 

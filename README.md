@@ -156,6 +156,15 @@ linux-aarch64, on a real macOS arm64 runner (which also validates zig's
 ad-hoc code signature — macOS kills invalidly signed binaries), and on a
 Windows runner with `zlib.dll` provided via `pixi exec`.
 
+A fourth job rebuilds the linux-64 examples with the **official, unpatched
+zig** from ziglang.org (`pixi run compare-upstream`,
+`scripts/compare-upstream-zig.sh`) and diffs `NEEDED` entries and sizes
+against the conda-forge-zig artifacts. conda-forge patches its zig; the
+measured consequences are in
+[`docs/conda-forge-zig-compiler.md`](docs/conda-forge-zig-compiler.md).
+The job fails if an upstream build breaks or if the difference is anything
+other than the feedstock's known extra glibc `NEEDED` entries.
+
 ## Zig upstream is on Codeberg
 
 All official Zig repositories moved from GitHub to
@@ -166,6 +175,16 @@ used for releases, sources, issues or dependencies. Use
 [`docs/zig-upstream-is-on-codeberg.md`](docs/zig-upstream-is-on-codeberg.md).
 
 ## Known gaps / next steps
+
+- **conda-forge zig patches**: the feedstock's `prefer-shared-libcxx` patch
+  makes `zig c++` link a shared libc++ dynamically whenever one sits in the
+  *build* prefix, giving C++ packages an undeclared runtime dependency. The
+  backend warns at build time on native builds; C++ consumers should declare
+  `libcxx` as a host dependency. The `--no-as-needed` patch adds six glibc
+  `NEEDED` entries to every dynamic linux binary (harmless). A true
+  "vanilla" build needs the upstream binary: the `toolchain-package` backend
+  option lets a package repackaging the official ziglang.org build satisfy
+  the zig requirement. No such package exists on conda-forge yet.
 
 - **macOS cross with conda dylib deps**: with relocation skipped, binaries
   that link dylibs from conda host dependencies keep absolute prefix paths;

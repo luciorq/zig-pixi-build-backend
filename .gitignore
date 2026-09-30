@@ -49,3 +49,6 @@ examples/*/.pixi/
 .zig-cache/
 zig-out/
 extracted-*/
+
+# Upstream zig tarballs fetched by scripts/compare-upstream-zig.sh
+.cache/

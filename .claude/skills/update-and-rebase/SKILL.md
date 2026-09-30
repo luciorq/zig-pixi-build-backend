@@ -130,6 +130,21 @@ Then the demos, one at a time, each grepping its expected line:
 | `pixi run demo-zon-dep` | `greetings from a zon dependency on x86_64-linux` |
 | `pixi run demo-greet` | `hello from libgreet on x86_64-linux` |
 
+Then the upstream-zig comparison (fetches the sha-verified official
+tarball into `.cache/upstream-zig/`, builds the linux-64 examples with it,
+diffs `NEEDED`/size against `dist/`):
+
+```sh
+pixi run -q bash scripts/compare-upstream-zig.sh
+```
+
+The only expected difference is `only-conda={libdl libm libresolv librt
+libutil}` on dynamically linked binaries (conda-forge's `--no-as-needed`
+patch). Anything `only-upstream`, or libc++/libstdc++/libunwind appearing
+only on the conda side, is a regression to investigate against
+`docs/conda-forge-zig-compiler.md` ("Feedstock patches"). When the zig
+feedstock ships a new build, re-run this before trusting the matrix.
+
 Not reproducible locally (no `qemu-aarch64` installed): the aarch64
 execution step, and the macOS/Windows execution jobs. CI covers them.
 

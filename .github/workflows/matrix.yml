@@ -122,6 +122,43 @@ jobs:
           name: conda-packages
           path: testbed/dist/*.conda
 
+  compare-upstream-zig:
+    name: compare against upstream zig (linux-64)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: testbed
+      - uses: actions/download-artifact@v7
+        with:
+          name: conda-packages
+          path: testbed/dist
+      - uses: prefix-dev/setup-pixi@v0.10.1
+        with:
+          manifest-path: testbed/pixi.toml
+          run-install: true
+      # conda-forge patches its zig (docs/conda-forge-zig-compiler.md,
+      # "Feedstock patches"). Rebuild the linux-64 examples with the
+      # sha256-verified official tarball from ziglang.org and report NEEDED
+      # and size differences. Fails only if the upstream build breaks; the
+      # expected steady-state diff is the extra glibc NEEDED entries added
+      # by the feedstock's --no-as-needed patch.
+      - name: Build examples with upstream zig and diff against conda artifacts
+        working-directory: testbed
+        run: pixi run -q bash scripts/compare-upstream-zig.sh | tee compare-upstream.out
+      - name: Assert the diff is the known as-needed delta only
+        working-directory: testbed
+        run: |
+          # Every NEEDED difference must be explained by the as-needed patch:
+          # only-conda entries drawn from the glibc set, nothing only-upstream.
+          ! grep -E 'only-upstream=\{[^}]+\}' compare-upstream.out
+          ! grep -E 'only-conda=\{[^}]*\b(lib(c\+\+|stdc\+\+|unwind|gcc_s))' compare-upstream.out
+      - uses: actions/upload-artifact@v7
+        with:
+          name: compare-upstream-zig
+          path: testbed/compare-upstream.out
+
   run-macos:
     name: execute on macOS arm64
     needs: build

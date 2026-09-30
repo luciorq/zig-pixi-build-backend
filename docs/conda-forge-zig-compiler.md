@@ -179,3 +179,58 @@ matrix, maintainers, PR #175 still draft).
   `zig = "0.16.*"` pin in the examples).
 - The MSVC/GNU Windows divergence persists; still an open ecosystem
   question, not something the feedstock is moving on.
+
+## Feedstock patches: downstream impact (measured 2026-09-30)
+
+The feedstock carries ~30 patches (`recipe/PATCH_MANIFEST.yaml`, scored
+against build 17). Most only affect building zig itself (max_rss, CMake
+LLVM library lists, MSVC CRT for the zig binary, doctest plumbing) and are
+invisible to consumers. Six change what the compiler emits. Measured by
+compiling identical C, C++ and Zig programs with conda-forge
+`zig 0.16.0 build 17` and the official `zig-x86_64-linux-0.16.0.tar.xz`
+from `ziglang.org/download/index.json` (sha256 verified), on linux-64.
+
+| patch (selector) | measured effect |
+|---|---|
+| `linux/Lld.zig-no-unconditional-as-needed-glibc-bundled` (linux) | **every dynamically linked linux binary gains `NEEDED` libm, libresolv, libpthread, libdl, librt, libutil**. Upstream: libc only (plus ld-linux/libpthread for Zig binaries). Our `zlib-zig` and `greet-cli` artifacts show this. Harmless at runtime (all glibc), but it is overlinking and it is what rattler-build's linkage checks see. Rationale (NOTES.md 1.4): keep `-lm` in `DT_NEEDED` so `dlsym(sin)` works. |
+| `Lld.zig-prefer-shared-libcxx` (unconditional) | **if a `libc++.so*`/`libc++*.dylib` is resolvable next to `zig_lib_dir`, `zig c++` links it dynamically instead of the bundled static libc++.** Measured: 4.8 MB self-contained binary → 1.5 MB with `NEEDED libc++.so.1`. Fires for native *and* explicit same-arch targets (`-Dtarget=x86_64-linux-gnu.2.28` on a linux-64 host), so the backend's always-explicit target does not avoid it. Absent libc++: identical to upstream (318 libc++ symbols bundled). |
+| `main.zig-fuse-ld-lld-cc-path` (unconditional) | `zig cc -fuse-ld=lld` switches to LLD silently and forwards unknown linker flags as `-Wl,`. Upstream warns "argument unused" and ignores it. Only matters for C build steps passing linker flags. |
+| `linux/target.zig-glibc-needs-libunwind` (linux) | libunwind forced for all glibc link modes. No measurable size or symbol difference in the probes. |
+| `linux/link.zig-01/02/03` ld-script trio (linux) | conda's glibc 2.17 sysroot ships `libc.so` as a linker script. Inert for us (we link zig's bundled glibc via the `.2.28` triple suffix). `allow_so_scripts` default flip is reversible with `-fno-allow-so-scripts`. |
+| `linux/Sema.zig-shr-exact-safety-downgrade` (linux) | codegen change in safe modes for all LLVM targets. A minimal `@shrExact` violation panicked identically on both toolchains (fold did not reproduce). Cannot affect the backend's `ReleaseFast` default. |
+
+Cross outputs for `aarch64-macos` and `x86_64-windows-gnu` were identical in
+size, dylib references and DLL imports between the two toolchains: the
+Windows-only patches (`non_unix/*`, incl. the mingw CRT edits) apply only to
+the zig binary built *on* Windows, so a linux host cross-compiling to win-64
+uses upstream's mingw sources while a Windows host uses patched ones.
+
+Non-patch differences: the conda wrappers default Windows to
+`x86_64-windows-msvc` (we default to `-gnu`), and the activation pre-sets
+`ZIG_GLOBAL_CACHE_DIR` (the backend overrides it). Both already tracked.
+
+### Consequences for pixi-build-zig
+
+- **libc++ hazard.** In pixi-build the build prefix (`bld/`, where `zig`
+  lives) and the host prefix are separate directories, so the probe only
+  fires when something puts conda `libcxx` into the *build* prefix (e.g. a
+  `build-dependencies` entry on `libcxx`, `clangxx`, or an LLVM-based tool
+  that pulls it). The resulting package then depends on `libc++.so.1` at
+  runtime without declaring it. The backend now emits a warning at build
+  time when `libc++` is found in `$BUILD_PREFIX/lib` on a native build; C++
+  consumers should declare `libcxx` as a *host* dependency (run-exports
+  cover the runtime) or keep it out of build deps.
+- **DT_NEEDED overlinking** is unavoidable with the conda binary. Not a
+  correctness issue.
+- **A "vanilla upstream" build cannot be a flag**: none of the above except
+  the ld-script default is runtime-toggleable. It can only mean running the
+  official binary. Implemented as the `toolchain-package` backend option,
+  which lets a conda package that repackages upstream zig (must provide a
+  `zig` executable on `PATH`) satisfy the requirement instead of
+  conda-forge `zig`. The backend does not download tarballs: that would
+  forfeit pinning, offline reproducibility and any path to conda-forge use.
+- **CI comparison lane**: `scripts/compare-upstream-zig.sh` (pixi task
+  `compare-upstream`) builds the linux-64 examples with the sha-pinned
+  official tarball and diffs `NEEDED`/size against the conda artifacts in
+  `dist/`, so conda-patch regressions surface on every run. The expected
+  steady-state diff is exactly the as-needed patch's extra glibc entries.
