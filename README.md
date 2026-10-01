@@ -42,13 +42,16 @@ zig build --build-file .../build.zig --prefix "$PREFIX" --search-prefix "$PREFIX
 
 ## Verified so far (2026-08-13, linux-64 build machine)
 
-Re-verified 2026-09-16 after rebasing the fork onto upstream pixi
-`f14af9ea8` (pixi 0.81.0, `rattler_build_core` 0.2.13,
-`rattler_build_recipe` 0.1.14) against conda-forge zig 0.16.0 build 17:
-backend unit tests (40), the full 16-artifact matrix below, the layout and
-binary-format checks from CI, and the three native demos all pass with
-build hashes identical to the previous run. Only the qemu aarch64 execution
-step was not reproduced locally (no `qemu-aarch64` installed).
+Re-verified 2026-10-01 after rebasing the fork onto upstream pixi
+`6f71156de` (pixi 0.81.0, `rattler_build_core` 0.2.15,
+`rattler_build_recipe` 0.1.16, `rattler_conda_types` 0.55 — which renamed
+`Platform` to `Subdir`, ported in the backend) against conda-forge zig
+0.16.0 build 19: backend unit tests (44), the full 16-artifact matrix
+below, the CI layout and binary-format checks, the three native demos and
+the upstream-zig comparison all pass, with build hashes identical to the
+2026-09-30 run. Only the qemu aarch64 execution step was not reproduced
+locally. Previous re-verification: 2026-09-16 on upstream `f14af9ea8`
+(core 0.2.13, recipe 0.1.14, zig build 17).
 
 | target | result | artifact |
 |---|---|---|

@@ -52,6 +52,10 @@ in `docs/conda-forge-zig-compiler.md`.
 ```sh
 cd ../pixi
 git status --short                      # must be clean
+# insta leaves `*.pending-snap` files after a failed snapshot run; untracked,
+# so a clean status still shows them as `??`. They BLOCK rebase picks
+# ("untracked working tree files would be overwritten"). Remove first:
+find crates/pixi_build_zig -name '*.pending-snap' -delete
 git fetch upstream main
 git branch -f backup/feat-pixi-build-zig-pre-rebase-$(date +%Y%m%d) HEAD
 git log --format='%h %s' upstream/main..HEAD      # the fork commits (currently 8)
@@ -69,7 +73,11 @@ git add Cargo.lock
 GIT_EDITOR=true git rebase --continue
 ```
 
-Repeat until `Successfully rebased`. Any conflict outside `Cargo.lock` means
+Repeat until `Successfully rebased`. A compile error after the rebase (not a
+conflict) usually means a rattler type rename: 2026-10-01 `Platform` became
+`Subdir` (`Subdir::current()` is `Option`, upstream uses
+`.unwrap_or(Subdir::NoArch)`); mirror `crates/pixi_build_rust` on
+upstream. Any conflict outside `Cargo.lock` means
 upstream changed the backend framework (`crates/pixi_build_backend`,
 `rattler_build_recipe` API); stop and resolve by hand, mirroring what
 `crates/pixi_build_rust` or `crates/pixi_build_cmake` do on upstream.

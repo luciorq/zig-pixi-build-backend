@@ -4,6 +4,9 @@ Reviewed 2026-09-05 against zig-feedstock main (0.16.0, build 16 in
 `recipe.yaml`, build 15 published) and the live conda-forge channel.
 Re-checked 2026-09-16: build 17 published (2026-09-15), build 18 open as
 the declared last 0.16.0 build; see "Update 2026-09-16" at the end.
+Re-checked 2026-10-01: build 19 published (2026-09-24), build 20 open;
+**zig 0.17.0 tagged upstream on 2026-10-01** (not yet announced); see
+"Update 2026-10-01".
 
 > **Zig upstream is on Codeberg, not GitHub.** Every `github.com/ziglang/*`
 > repository is a frozen leftover of the 2025-11-26 migration. Use
@@ -179,6 +182,38 @@ matrix, maintainers, PR #175 still draft).
   `zig = "0.16.*"` pin in the examples).
 - The MSVC/GNU Windows divergence persists; still an open ecosystem
   question, not something the feedstock is moving on.
+
+## Update 2026-10-01
+
+Delta against 2026-09-16.
+
+### zig-feedstock
+
+- **Build 19 published 2026-09-24** (`zig-0.16.0-h8b992aa_19` on linux-64),
+  via PR #190 "MNT: v0.16.0 19 brush interpreter": recipe build/test
+  scripts now run under `brush` instead of bash (seven `m2-bash` deps
+  replaced). No change to the wrapper design, patches or activation
+  contract; `recipe.yaml` on main reads `build_number: 19`. Build 18 was
+  not the last 0.16.0 build after all.
+- **PR #198 "MNT: v0.16.0 build 20 mingw CRT coverage"** open: test-only
+  (import-lib assertions for `libarm64/`/`lib32/`), no build-logic change.
+- `dev` branch: `version: "0.17.0"`, `build_number: 23200` (snapshot-style
+  numbering), LLVM 22.1.6; daily snapshot bumps continue (PRs #189–#202),
+  latest `2320+1e770dbef`. PR #203 relocates maintainer docs.
+
+### Upstream ziglang/zig
+
+- **Tag `0.17.0` created on Codeberg 2026-10-01 14:58 -07:00**
+  (commit `7647adab80`). As of this check `ziglang.org/download/index.json`
+  still lists only `master` (`0.17.0-dev.2384`) and 0.16.0 as latest
+  stable, the release notes URL 404s and there is no news post. Treat as
+  "release in progress"; expect the feedstock `dev` line to become the
+  `main` line soon after, with the `cross_target_platform_`→`xtarget_`
+  lane layout and native win-arm64 hosting carried over.
+- Backend readiness items for 0.17 remain as listed under 2026-09-16
+  (`ZIG_GLOBAL_CACHE_DIR` only; no `--global-cache-dir` on `zig build`).
+  The examples pin `zig = "0.16.*"`; bump once 0.17.0 reaches the
+  conda-forge `main` label.
 
 ## Feedstock patches: downstream impact (measured 2026-09-30)
 

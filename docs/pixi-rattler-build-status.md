@@ -10,19 +10,28 @@ the upstream state the pixi-build-zig fork (`../pixi`, branch
 |---|---|---|---|
 | pixi | 0.81.0 | 0.81.0 (tag 2026-09-15) | **0.81.0** |
 | `pixi-build-api-version` | 7 | 7 (lower 7, upper 8) | 7 |
-| `rattler_build_core` | 0.2.13 | 0.2.13 | **0.2.14** (2026-09-14) |
-| `rattler_build_recipe` | 0.1.14 | 0.1.14 | **0.1.15** (2026-09-14) |
-| `rattler_build_jinja` / `_variant_config` | 0.1.14 | 0.1.14 | 0.1.15 |
-| `rattler_build_types` | 0.1.13 | 0.1.13 | — |
-| `rattler_conda_types` | 0.52 | 0.52 | — |
+| `rattler_build_core` | 0.2.15 | 0.2.15 | **0.2.15** (2026-09-30) |
+| `rattler_build_recipe` | 0.1.16 | 0.1.16 | **0.1.16** (2026-09-30) |
+| `rattler_build_jinja` / `_variant_config` | 0.1.16 | 0.1.16 | 0.1.16 |
+| `rattler_build_types` | 0.1.15 | 0.1.15 | 0.1.15 |
+| `rattler_conda_types` | 0.55 | 0.55 | 0.55.0 (2026-09-29) |
+| `rattler` | 0.51 | 0.51 | 0.51.0 (2026-09-29) |
 | rattler-build CLI | — | — | **0.76.1** (2026-09-14) |
 
-Fork rebased 2026-09-16 onto upstream `f14af9ea8` (2026-09-16, 39 commits
-absorbed, 8 fork commits replayed). The only conflict was `Cargo.lock`,
-resolved by taking upstream's lock and letting cargo re-add the
-`pixi-build-zig` entry; the fork's `Cargo.toml` is now byte-identical to
-upstream and the lock differs only by that one package. Before the rebase
-the fork was on pixi 0.78.0 / core 0.2.12 / recipe 0.1.13.
+Fork rebased 2026-10-01 onto upstream `6f71156de` (29 commits absorbed, 9
+fork commits replayed, Cargo.lock-only conflict). Upstream #7123
+(2026-10-01) bumped the whole rattler family (solver 9→10, virtual
+packages 6→8, conda_types 0.52→0.55) and let the caret pins float to
+rattler-build core 0.2.15 / recipe 0.1.16. **Breaking for backends:
+`rattler_conda_types::Platform` is gone, replaced by `Subdir`**
+(`Subdir::current()` returns `Option`; upstream backends use
+`.unwrap_or(Subdir::NoArch)`). The `GenerateRecipe` trait now takes
+`host_platform: Subdir`. Ported in the zig crate (`target.rs`, `main.rs`;
+helper `build_subdir()`); the earlier-flagged recipe 0.1.15 signature
+changes did not affect the crate (none of those functions are called).
+
+Previous rebase: 2026-09-16 onto `f14af9ea8` (pixi 0.81.0, core 0.2.13,
+recipe 0.1.14, conda_types 0.52).
 
 ## pixi 0.79.0 → 0.81.0 (2026-09-03 → 2026-09-15)
 
@@ -68,6 +77,16 @@ the fork was on pixi 0.78.0 / core 0.2.12 / recipe 0.1.13.
   fixes #7000), #6993 (`pin-compatible` against path deps in lock check),
   #6960 (pixi-build-rust: scope cross-compile C flags), #6887 (reuse
   immutable git build artifacts).
+
+## rattler-build crates 0.2.14/0.1.15 → 0.2.15/0.1.16 (2026-09-14 → 2026-09-30)
+
+Crate-only publishes (#2776 on 09-14, #2821 on 09-30); no CLI release after
+0.76.1. Commits in between: Python test-platform independence (#2826),
+retry empty/truncated source downloads (#2823), `exclude-newer` policies
+for Python builds/tests/debug (#2801), rattler + sigstore dependency bumps
+(#2829, #2834), `cc` pinned to 1.4.7 (#2835), docs for `compiler()` values
+(#2832). `macos/link.rs` still last touched 2026-08-05: the `LC_RPATH`
+draft issue stays valid.
 
 ## rattler-build 0.74.0 → 0.76.1 (2026-08-17 → 2026-09-14)
 
