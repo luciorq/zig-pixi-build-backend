@@ -134,6 +134,23 @@ path with one extra `../` for path packages, so the consumer declares an
 explicit run-dependency instead — see
 `docs/upstream/pixi-run-exports-path.md` for the full analysis.
 
+### examples/options-zig — full-surface option drift test
+
+Every `[package.build.config]` key declared once with a non-default value
+(`cpu = "x86_64_v2"`, `optimize = "ReleaseSafe"`, `glibc-version = "2.31"`,
+a custom `-D` option through `extra-args`, `env`, `extra-input-globs`,
+`ignore-zon-manifest`, `shared-global-cache = false`, `binary-relocation`,
+`export-c-toolchain`, `toolchain-package`, plus `windows-abi` and
+`macos-deployment-target` under per-target sections). Built natively on
+linux-64 only; `pixi run demo-options` (`scripts/check-options-example.sh`)
+asserts each option's *effect*: the flags and exports in the build log, the
+per-build `.zig-global-cache` in the work directory, the package name and
+version coming from `[package]` rather than the (deliberately wrong)
+`build.zig.zon`, no glibc symbol above 2.31 in the binary, and the running
+program reporting the `-D` value, the env value, the optimize mode, the CPU
+model and the embedded asset. The manifest is byte-identical to the "Full
+example" in the backend docs; the update skill diffs the two.
+
 ## Usage
 
 The backend is not published to any channel yet, so builds point pixi at a

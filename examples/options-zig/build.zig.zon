@@ -1,0 +1,16 @@
+.{
+    // Deliberately WRONG name/version: the manifest sets
+    // ignore-zon-manifest = true, so the package must be named from
+    // [package] (options_zig 0.3.0), not from here.
+    .name = .not_the_package_name,
+    .version = "9.9.9",
+    .fingerprint = 0x61b0084c918b286c,
+    .minimum_zig_version = "0.14.0",
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "assets",
+    },
+}

@@ -54,6 +54,11 @@ build-greet = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_
 demo-greet = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi run --manifest-path examples/greet-zig/pixi.toml demo", description = "Build, install and run greet-cli in the workspace env" }
 cross-greet-win64 = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig pixi publish --target-platform win-64 --target-dir ../../dist", cwd = "examples/greet-zig", description = "Joint win-64 cross build of libgreet + greet-cli" }
 
+# Full-surface option drift test: examples/options-zig declares every backend
+# config key with a non-default value; the script builds it natively and
+# asserts each option's effect (linux-64 only; not part of the cross matrix).
+demo-options = { cmd = "PIXI_BUILD_BACKEND_OVERRIDE=pixi-build-zig=$PIXI_PROJECT_ROOT/../pixi/target/debug/pixi-build-zig bash scripts/check-options-example.sh", description = "Build examples/options-zig and assert every backend option took effect" }
+
 # Inspect what landed in dist/.
 verify = { cmd = "bash scripts/verify-artifacts.sh", description = "Extract dist/*.conda and report binary formats" }
 # Rebuild the linux-64 examples with the official ziglang.org tarball and

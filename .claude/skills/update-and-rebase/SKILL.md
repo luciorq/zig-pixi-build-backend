@@ -193,6 +193,18 @@ Update and stage (do not commit):
 - Memory: append a `RE-REBASED <date>` line to the `pixi-build-zig-location`
   memory note (upstream sha, crate versions, backup ref, test count).
 
+Check that the backend doc's "Full example" is still byte-identical to the
+drift-test manifest (both must change together; any new config option goes
+into both, with a non-default value and an assertion in
+`scripts/check-options-example.sh`):
+
+```sh
+diff <(awk '/^### Full example/{f=1} f&&/^```toml/{c=1;next} f&&c&&/^```/{exit} f&&c' \
+        ../pixi/docs/build/backends/pixi-build-zig.md) examples/options-zig/pixi.toml \
+  && echo "doc snippet == examples/options-zig/pixi.toml"
+pixi run demo-options     # every option's effect asserted, linux-64 native
+```
+
 Grep both repos for stale claims the findings invalidate, e.g.
 `grep -rn -iE 'github\.com/ziglang|global-cache-dir' README.md docs ../pixi/crates/pixi_build_zig ../pixi/docs/build/backends/pixi-build-zig.md`.
 

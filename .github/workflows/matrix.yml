@@ -75,6 +75,10 @@ jobs:
           pixi run build-greet
           pixi run cross-greet-win64
 
+      - name: Full-surface option drift test (examples/options-zig, linux-64)
+        working-directory: testbed
+        run: pixi run demo-options
+
       - name: Verify artifact layouts and binary formats
         working-directory: testbed
         run: |
