@@ -179,6 +179,15 @@ used for releases, sources, issues or dependencies. Use
 
 ## Known gaps / next steps
 
+- **zig 0.17.0** (released 2026-10-01) is not on conda-forge `main` yet
+  (still 0.16.0). The examples already compile with the official 0.17.0
+  tarball for every target the matrix covers
+  (`UPSTREAM_ZIG_VERSION=0.17.0 pixi run -q bash scripts/compare-upstream-zig.sh`);
+  when conda-forge promotes it, bump the `zig = "0.16.*"` pins and the
+  comparison script default. Details in
+  [`docs/conda-forge-zig-compiler.md`](docs/conda-forge-zig-compiler.md),
+  "Update 2026-10-03".
+
 - **conda-forge zig patches**: the feedstock's `prefer-shared-libcxx` patch
   makes `zig c++` link a shared libc++ dynamically whenever one sits in the
   *build* prefix, giving C++ packages an undeclared runtime dependency. The

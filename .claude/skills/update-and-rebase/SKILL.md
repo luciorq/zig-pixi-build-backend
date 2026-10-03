@@ -153,6 +153,20 @@ only on the conda side, is a regression to investigate against
 `docs/conda-forge-zig-compiler.md` ("Feedstock patches"). When the zig
 feedstock ships a new build, re-run this before trusting the matrix.
 
+**New-zig readiness** (when ziglang.org lists a newer stable than the
+examples' pin, or before bumping the pin): rerun the comparison against
+that version — it downloads and sha-verifies the official tarball and
+reports any example that no longer compiles:
+
+```sh
+UPSTREAM_ZIG_VERSION=<new version> pixi run -q bash scripts/compare-upstream-zig.sh
+```
+
+Fix examples so they compile on BOTH the conda-forge version and the new
+one (conda-forge lags upstream by weeks). Known 0.17 traps: `a ** n` array
+multiplication removed; `--prefix` must exist (the backend's script does
+`mkdir -p`, ad-hoc `zig build` calls must too).
+
 Not reproducible locally (no `qemu-aarch64` installed): the aarch64
 execution step, and the macOS/Windows execution jobs. CI covers them.
 

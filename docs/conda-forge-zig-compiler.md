@@ -7,6 +7,9 @@ the declared last 0.16.0 build; see "Update 2026-09-16" at the end.
 Re-checked 2026-10-01: build 19 published (2026-09-24), build 20 open;
 **zig 0.17.0 tagged upstream on 2026-10-01** (not yet announced); see
 "Update 2026-10-01".
+Re-checked 2026-10-03: **zig 0.17.0 released** (ziglang.org, 2026-10-01);
+conda-forge `main` still 0.16.0 build 19; examples verified 0.17-ready; see
+"Update 2026-10-03".
 
 > **Zig upstream is on Codeberg, not GitHub.** Every `github.com/ziglang/*`
 > repository is a frozen leftover of the 2025-11-26 migration. Use
@@ -214,6 +217,57 @@ Delta against 2026-09-16.
   (`ZIG_GLOBAL_CACHE_DIR` only; no `--global-cache-dir` on `zig build`).
   The examples pin `zig = "0.16.*"`; bump once 0.17.0 reaches the
   conda-forge `main` label.
+
+## Update 2026-10-03 — zig 0.17.0 released; readiness check
+
+- **Released**: `index.json` lists 0.17.0 (date 2026-10-01), news post
+  `/news/0.17.0-released/`, release notes live. Toolchain: LLVM/Clang
+  22.1.8, glibc 2.44, musl 1.2.5, Linux 7.2 headers, macOS 27.0 headers,
+  new MinGW-w64 snapshot with many functions now provided by zig's own libc.
+  Loop vectorization remains disabled (LLVM regression workaround). Drops
+  `powerpc64-linux-gnu` (big-endian) and `powerpc-linux-gnueabi[hf]`;
+  ppc64le unaffected. Minimum Linux kernel 5.10, Windows 10.
+- **conda-forge**: `main` label still `zig-0.16.0 build 19`; no 0.17.0 PR
+  against `main` yet. The `zig_dev` label carries 0.17.0 *pre-tag*
+  snapshot builds (`0.17.0-bdf2b7b_2320_1e770dbef_23200`, 2026-09-29,
+  LLVM 22.1.6). Expect a rebuild on the final tag and LLVM 22.1.8 before
+  promotion.
+- **Build-system changes relevant to the backend** (release notes, "Build
+  System"): `zig build` is now split into a *configurer* (runs `build.zig`)
+  and an optimised *maker* (package management + build graph); the
+  configuration is serialised and the old "override the build runner" hook
+  is gone (Build Server Protocol replaces it). Package management (`zig
+  fetch`, `zig build`, `zig libc`, …) moved out of the compiler into the
+  build system. Cache format is now binary (`zig cache-cat` to inspect);
+  cache directories are still selected through `ZIG_GLOBAL_CACHE_DIR` /
+  `ZIG_LOCAL_CACHE_DIR` — observed: `zig build` forwards them to
+  `build-exe` as `--global-cache-dir`/`--cache-dir`, so the backend's
+  unconditional exports keep working. New `--pkg-path` / `ZIG_LOCAL_PKG_DIR`
+  for overriding package locations (candidate for an offline zon story).
+- **Behaviour change caught by testing**: 0.17 **requires the `--prefix`
+  directory to exist** (`unable to open prefix directory … FileNotFound`);
+  0.16 created it. The backend's build script already runs `mkdir -p` on
+  the install prefix before `zig build`, so packages are unaffected; ad-hoc
+  invocations must create it.
+- **Language change that hit an example**: array multiplication
+  (`"literal" ** 8`) is removed in favour of `@splat`. `examples/zlib-zig`
+  used it; replaced with a comptime `repeat()` helper that compiles on both
+  0.16 and 0.17 (the demo output is unchanged, 360 → 57 bytes). No other
+  removed syntax (`void{}`, `errdefer |e|`, `@cImport`, `i0`) in the
+  examples.
+- **Readiness result with the official 0.17.0 tarball** (sha256-verified,
+  `UPSTREAM_ZIG_VERSION=0.17.0 pixi run -q bash scripts/compare-upstream-zig.sh`):
+  all five linux-64 example builds succeed; cross builds of hello-zig and
+  zon-dep-zig succeed for `x86_64-windows-gnu`, `aarch64-macos`,
+  `x86_64-macos` and `aarch64-linux-gnu.2.28` with the backend's exact
+  `-Dtarget`/`-Dcpu`/`-Doptimize` flags. The NEEDED diff against the
+  conda-forge 0.16 artifacts is the usual as-needed delta only.
+- **Still to do when conda-forge promotes 0.17.0**: bump `zig = "0.16.*"`
+  in the four example manifests, bump `UPSTREAM_ZIG_VERSION` default in
+  `scripts/compare-upstream-zig.sh`, re-run the matrix (expect new build
+  hashes), and re-check the feedstock's patch set — the maker/configurer
+  split and the libc changes may invalidate or add patches (watch
+  `recipe/PATCH_MANIFEST.yaml`).
 
 ## Feedstock patches: downstream impact (measured 2026-09-30)
 
