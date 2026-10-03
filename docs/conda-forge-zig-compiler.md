@@ -244,11 +244,51 @@ Delta against 2026-09-16.
   `build-exe` as `--global-cache-dir`/`--cache-dir`, so the backend's
   unconditional exports keep working. New `--pkg-path` / `ZIG_LOCAL_PKG_DIR`
   for overriding package locations (candidate for an offline zon story).
-- **Behaviour change caught by testing**: 0.17 **requires the `--prefix`
-  directory to exist** (`unable to open prefix directory … FileNotFound`);
-  0.16 created it. The backend's build script already runs `mkdir -p` on
-  the install prefix before `zig build`, so packages are unaffected; ad-hoc
-  invocations must create it.
+- **Prefix handling (correction, re-tested 2026-10-03)**: both 0.16 and
+  0.17 create a missing `--prefix`; what fails on both (`unable to open
+  prefix directory … FileNotFound`) is a missing `--search-prefix`. Not a
+  0.17 change. The backend passes `--search-prefix` on the install prefix
+  and `mkdir -p`s it first, so packages are unaffected; ad-hoc invocations
+  that pass `--search-prefix` must create the directory.
+- **First-use build-system compile (measured)**: because the maker,
+  configurer and package-management code now ship as source, the first
+  `zig build` against an empty *global* cache compiles them:
+  **108 s wall / 1.08 GB RSS cold vs 13.6 s warm** on this machine (0.16
+  cold: 22 s). The compiled artifacts land in `ZIG_GLOBAL_CACHE_DIR`
+  (64 MB). With the backend's former per-build global cache every package
+  build would have paid this; the backend now shares the global cache
+  across a workspace's builds through pixi's per-workspace scratch
+  directory (`.pixi/scratch-v0/zig-global-cache`), with
+  `shared-global-cache = false` restoring the per-build layout. The local
+  cache stays per build. This mirrors what the feedstock's own
+  activation does (XDG → `$HOME/.local/share` → `$TMPDIR` fallback for
+  `ZIG_GLOBAL_CACHE_DIR`) and what its C wrappers do
+  (`init_zig_global_cache_dir()`), for the same reason.
+- **Maker/configurer argument split**: the feedstock's `build.sh` keeps
+  `ZIG_MAKER_ARGS` (non-`-D` flags: `--search-prefix`, `--maxrss`,
+  `--verbose-link`, `-fqemu`, `--libc`) ahead of `ZIG_PKG_OPTS` (`-D*`).
+  Tested on the 0.17.0 CLI: ordering is **not** enforced — maker flags
+  after `-D` options work, and an unknown `-D` is still rejected by the
+  configurer. The backend already emits non-`-D` flags first and
+  `extra-args` last; no change needed, but the split is the right mental
+  model.
+- **`lib/zig/compiler`, `lib/zig/build-web`, `lib/zig/init` are runtime
+  requirements of `zig build`** on 0.17 (the feedstock `dev` recipe lists
+  them explicitly in `zig_impl_*`). The backend never trims `lib/zig`; a
+  `toolchain-package` substitute must ship them too.
+- **Feedstock `dev` branch state** (verified): tracks master snapshots via
+  daily bump PRs (latest merged `0.17.0-dev.2320+1e770dbef`,
+  `build_number: 23200`, LLVM 22.1.6); adds
+  `build.zig-03-compiler-step-zig-lib-dir.patch` and uses `ZIG_LIB_DIR`
+  in the staged bootstrap since `--zig-lib-dir` is gone; packages the
+  build-system sources; carries the same LLD/libc++/mingw patch stack as
+  `main` plus a `bootstrap_via_upstream` switch. Its `conda-forge.yml`
+  lists `dev` under `bot.abi_migration_branches` and has **no**
+  `feedstock_name`; the README's `zig-feedstock-0.17-feedstock` links are
+  a conda-smithy rendering artifact (no such repository exists). So there
+  is no evidence yet of a separate 0.17 feedstock; the realistic paths are
+  promotion of `dev` to `main` or continued publication under the
+  `zig_dev` label.
 - **Language change that hit an example**: array multiplication
   (`"literal" ** 8`) is removed in favour of `@splat`. `examples/zlib-zig`
   used it; replaced with a comptime `repeat()` helper that compiles on both
@@ -262,6 +302,24 @@ Delta against 2026-09-16.
   `x86_64-macos` and `aarch64-linux-gnu.2.28` with the backend's exact
   `-Dtarget`/`-Dcpu`/`-Doptimize` flags. The NEEDED diff against the
   conda-forge 0.16 artifacts is the usual as-needed delta only.
+- **Opting into the `zig_dev` label today** (verified 2026-10-03 with
+  hello-zig, built and ran "hello from zig 0.17.0"): pixi's string form
+  `"conda-forge/label/zig_dev::zig>=0.17"` is **rejected** ("expected a
+  version specifier but looks like a matchspec"); use the table form and
+  add the label to the workspace channels, or the solve fails with
+  "requested unavailable channel":
+
+  ```toml
+  [workspace]
+  channels = ["conda-forge/label/zig_dev", "conda-forge"]
+
+  [package.build-dependencies]
+  zig = { version = ">=0.17", channel = "conda-forge/label/zig_dev" }
+  ```
+
+  The label only carries zig packages, so putting it first is safe under
+  strict channel priority. Expect ~2 min for the first build of a
+  workspace (cold maker compile into the shared global cache).
 - **Still to do when conda-forge promotes 0.17.0**: bump `zig = "0.16.*"`
   in the four example manifests, bump `UPSTREAM_ZIG_VERSION` default in
   `scripts/compare-upstream-zig.sh`, re-run the matrix (expect new build

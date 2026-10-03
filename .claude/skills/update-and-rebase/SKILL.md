@@ -164,8 +164,11 @@ UPSTREAM_ZIG_VERSION=<new version> pixi run -q bash scripts/compare-upstream-zig
 
 Fix examples so they compile on BOTH the conda-forge version and the new
 one (conda-forge lags upstream by weeks). Known 0.17 traps: `a ** n` array
-multiplication removed; `--prefix` must exist (the backend's script does
-`mkdir -p`, ad-hoc `zig build` calls must too).
+multiplication removed; a missing `--search-prefix` directory fails on
+every version (the backend's script does `mkdir -p`, ad-hoc `zig build`
+calls must too); the first `zig build` against an empty global cache
+compiles the build system (~100 s), so point `ZIG_GLOBAL_CACHE_DIR` at a
+reusable directory when timing things.
 
 Not reproducible locally (no `qemu-aarch64` installed): the aarch64
 execution step, and the macOS/Windows execution jobs. CI covers them.
